@@ -1,0 +1,43 @@
+.addModuleWrapper {
+  width: 800px;
+  height: 70px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+  transition: all 300s ease;
+  .input-inside {
+    border-radius: 5px;
+    border: 1px solid rgb(144, 141, 141);
+    height: 38px;
+    width: 250px;
+    padding: 2px 5px;
+  }
+  .inside-button {
+    height: 40px;
+    width: 200px;
+    border-radius: 5px;
+    background-color: rgb(80, 80, 236);
+    padding: 0;
+  }
+  .input-inside:focus {
+    outline: none;
+    border: none;
+    border: 1px solid rgb(105, 103, 103);
+  }
+}
+button {
+  background-color: rgba(80, 80, 236, 0.85);
+  color: white;
+  border: none;
+  border-radius: 2px;
+  padding: 3px 5px;
+}
+button:hover {
+  background-color: rgb(80, 80, 236);
+  cursor: pointer;
+}
+.react-flow__container .react-flow__controls {
+  display: none;
+}

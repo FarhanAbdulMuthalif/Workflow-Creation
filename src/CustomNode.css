@@ -17,4 +17,9 @@
   padding: 10px 20px;
   color: rgb(146, 78, 78);
   font-weight: 500;
+  border-radius: 5px;
+  .node-input {
+    border: none;
+    background-color: transparent;
+  }
 }

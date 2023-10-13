@@ -3,18 +3,17 @@ import { Handle, NodeProps, Position } from "reactflow";
 import "./CustomNode.css";
 import { Menu, MenuItem } from "@mui/material";
 import { KeyboardEvent, useState } from "react";
+import FlowConfigDialog from "./components/FlowConfigDialog";
 
-const CustomNode = ({ data, id }: NodeProps) => {
-  const [incomingNodes, setIncomingNodes] = useState<string[]>([]); // Initialize as an empty array
-  const [outgoingNodes, setOutgoingNodes] = useState<string[]>([]); // Initialize as an empty array
+const CustomNode = (props: NodeProps) => {
   const [NodeText, setNodeText] = useState("");
+  const [ConfigDialogShow, setConfigDialogShow] = useState(false);
   const [editNodeNameDisplay, seteditNodeNameDisplay] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    console.log(id);
-    if (id === "Start" || id === "End") return;
+    if (props.id === "Start" || props.id === "End") return;
     event.preventDefault();
     setAnchorEl(event.currentTarget);
   };
@@ -37,10 +36,10 @@ const CustomNode = ({ data, id }: NodeProps) => {
       e.preventDefault();
 
       if (editNodeNameDisplay) {
-        data.editNodes(NodeText, id);
+        props.data.editNodes(NodeText, props.id);
         seteditNodeNameDisplay(false);
       } else {
-        data.setNodes(NodeText, id);
+        props.data.setNodes(NodeText, props.id);
         setNodeText(""); // Clear the input field after setting the node name
       }
     }
@@ -49,36 +48,30 @@ const CustomNode = ({ data, id }: NodeProps) => {
   return (
     <div
       className={
-        data?.label === "Start" || data?.label === "End"
+        props.data?.label === "Start" || props.data?.label === "End"
           ? "node-radius-circle"
           : "node-radius-box"
       }
       onContextMenu={handleClick}
       onClick={() => {
-        console.log(data);
-
-        console.log(`Incoming edges:`, incomingNodes);
-        console.log(`Outgoing edges:`, outgoingNodes);
+        props.data.getData(props.id, props.data.label);
       }}
     >
-      {data?.label !== "Start" ? (
+      {props.data?.label !== "Start" ? (
         <Handle
-          type="target"
+          type="source"
           position={Position.Left}
           id="recieve"
           style={{ background: "#555" }}
           onConnect={(params) => {
             console.log(params.source);
             console.log(params);
-            setIncomingNodes((prev) => {
-              return [...prev, params.source || "default-source"];
-            });
           }}
         />
       ) : (
         ""
       )}
-      {data.label === "node" || editNodeNameDisplay ? (
+      {props.data.label === "node" || editNodeNameDisplay ? (
         <input
           type="text"
           className="node-input"
@@ -91,9 +84,9 @@ const CustomNode = ({ data, id }: NodeProps) => {
           placeholder="Enter name"
         />
       ) : (
-        <p>{data.label}</p>
+        <p>{props.data.label}</p>
       )}
-      {data?.label !== "End" ? (
+      {props.data?.label !== "End" ? (
         <Handle
           type="source"
           position={Position.Right}
@@ -102,9 +95,6 @@ const CustomNode = ({ data, id }: NodeProps) => {
           onConnect={(params) => {
             console.log(params.target);
             console.log(params);
-            setOutgoingNodes((prev) => {
-              return [...prev, params.target || "default-target"];
-            });
           }}
         />
       ) : (
@@ -122,13 +112,19 @@ const CustomNode = ({ data, id }: NodeProps) => {
         <MenuItem
           onClick={() => {
             seteditNodeNameDisplay(true);
-            setNodeText(data.label);
+            setNodeText(props.data.label);
           }}
           sx={menuItemStyleTwo}
         >
           Edit Name
         </MenuItem>
-        <MenuItem onClick={handleClose} sx={menuItemStyleTwo}>
+        <MenuItem
+          onClick={() => {
+            setConfigDialogShow(!ConfigDialogShow);
+            handleClose();
+          }}
+          sx={menuItemStyleTwo}
+        >
           Create Rules
         </MenuItem>
         <MenuItem onClick={handleClose} sx={menuItemStyleTwo}>
@@ -142,15 +138,25 @@ const CustomNode = ({ data, id }: NodeProps) => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            console.log(data);
-            console.log(id);
-            data.onDelete(id);
+            console.log(props.data);
+            console.log(props.id);
+            props.data.onDelete(props.id);
           }}
           sx={menuItemStyleTwo}
         >
           Delete Rules
         </MenuItem>
       </Menu>
+      <FlowConfigDialog
+        open={ConfigDialogShow}
+        handleClose={() => {
+          setConfigDialogShow(!ConfigDialogShow);
+        }}
+        content={props.data.label}
+        handleOk={() => {
+          setConfigDialogShow(!ConfigDialogShow);
+        }}
+      />
     </div>
   );
 };

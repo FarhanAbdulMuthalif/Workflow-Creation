@@ -1,8 +1,13 @@
-import { useCallback, useMemo, useState, useRef } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  createContext,
+} from "react";
 import ReactFlow, {
   useNodesState,
-  useEdgesState,
-  addEdge,
   MarkerType,
   Panel,
   OnConnect,
@@ -11,19 +16,34 @@ import ReactFlow, {
   Controls,
   Background,
   BackgroundVariant,
+  ConnectionMode,
+  Node,
+  Edge,
 } from "reactflow";
 
 import "reactflow/dist/style.css";
 import CustomNode from "./CustomNode";
 import "./App.css";
+import CustomEdge from "./FloatingEdge";
+type ComplexObject = {
+  incoming: string[];
+  outgoing: string[];
+};
 
-const initialEdges = [{ id: "e1-2", source: "Start", target: "Level 1" }];
-
+export const FlowContext = createContext<ComplexObject>({
+  incoming: [],
+  outgoing: [],
+});
 export default function App() {
-  // const [InputText, setInputText] = useState("");
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // The context is created with `| null` in the type, to accurately reflect the default value.
+  const [edges, setEdges] = useState<Edge[]>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const reactFlowContainerRef = useRef<HTMLDivElement | null>(null);
+  const [SelectedId, setSelectedId] = useState({ id: "", name: "" });
+  const [SelectedData, setSelectedData] = useState<{
+    incoming: string[];
+    outgoing: string[];
+  }>({ incoming: [], outgoing: [] });
 
   const initialNodes = [
     {
@@ -35,6 +55,8 @@ export default function App() {
         onDelete: onDeleteNode,
         setNodes: nodeNameCreateHandler,
         editNodes: editNodeNameHandler,
+        getData: getDataHandler,
+        edges: edges,
       },
     },
     {
@@ -46,21 +68,82 @@ export default function App() {
         onDelete: onDeleteNode,
         setNodes: nodeNameCreateHandler,
         editNodes: editNodeNameHandler,
-      },
-    },
-    {
-      id: "Level 1",
-      type: "textUpdater",
-      position: { x: 200, y: 200 },
-      data: {
-        label: "Level 1",
-        onDelete: onDeleteNode,
-        setNodes: nodeNameCreateHandler,
-        editNodes: editNodeNameHandler,
+        getData: getDataHandler,
+        edges: edges,
       },
     },
   ];
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+
+  function getDataHandler(nodeId: string, nodeName: string) {
+    setSelectedId({ id: nodeId, name: nodeName });
+  }
+  useEffect(() => {
+    function getSelectHandler() {
+      const incomingNodesMap = new Map<string, string[]>();
+      const outgoingNodesMap = new Map<string, string[]>();
+
+      edges.forEach((edge) => {
+        const { source, target } = edge;
+        if (!incomingNodesMap.has(target)) {
+          incomingNodesMap.set(target, [source]);
+        } else {
+          incomingNodesMap.get(target)!.push(source);
+        }
+
+        if (!outgoingNodesMap.has(source)) {
+          outgoingNodesMap.set(source, [target]);
+        } else {
+          outgoingNodesMap.get(source)!.push(target);
+        }
+      });
+      const incomingEdge = incomingNodesMap.get(SelectedId.id);
+      const outgoingEdge = outgoingNodesMap.get(SelectedId.id);
+      console.log("+++++++incoming+++++++");
+      console.log(incomingEdge);
+      console.log("+++++++outgoing+++++++");
+      console.log(outgoingEdge);
+      // Create a new array with labels based on the matching id
+      const labelsOutgoingArray = outgoingEdge?.map((id) => {
+        const node = nodes.find((node) => node.id === id);
+        return node ? node.data.label : ""; // Use null if no matching id is found
+      });
+      const labelsIncoingArray = incomingEdge?.map((id) => {
+        const node = nodes.find((node) => node.id === id);
+        return node ? node.data.label : ""; // Use null if no matching id is found
+      });
+
+      console.log(labelsOutgoingArray);
+      console.log(labelsIncoingArray);
+      setSelectedData({
+        incoming: labelsIncoingArray ?? [],
+        outgoing: labelsOutgoingArray ?? [],
+      });
+    }
+    getSelectHandler();
+  }, [SelectedId, edges, nodes]);
+
+  // const buildConnectedNodes = () => {
+  //   const incomingNodesMap = new Map<string, string[]>();
+  //   const outgoingNodesMap = new Map<string, string[]>();
+
+  //   edges.forEach((edge) => {
+  //     const { source, target } = edge;
+  //     if (!incomingNodesMap.has(target)) {
+  //       incomingNodesMap.set(target, [source]);
+  //     } else {
+  //       incomingNodesMap.get(target)!.push(source);
+  //     }
+
+  //     if (!outgoingNodesMap.has(source)) {
+  //       outgoingNodesMap.set(source, [target]);
+  //     } else {
+  //       outgoingNodesMap.get(source)!.push(target);
+  //     }
+  //   });
+
+  //   return { incomingNodes: incomingNodesMap, outgoingNodes: outgoingNodesMap };
+  // };
 
   function onDeleteNode(nodeId: string) {
     console.log(nodes);
@@ -125,59 +208,67 @@ export default function App() {
     }
   }, [rfInstance]);
 
-  const onRestore = useCallback(() => {
-    const restoreFlow = async () => {
-      const flow = JSON.parse(localStorage.getItem("prosol") || "");
+  const onRestore = () => {
+    const flow = JSON.parse(localStorage.getItem("prosol") ?? "");
 
-      if (flow) {
-        // const { x = 0, y = 0, zoom = 1 } = flow.viewport;
-        setNodes(flow.nodes || []);
-        setEdges(flow.edges || []);
+    if (flow) {
+      if (flow.nodes && flow.edges) {
+        // Provide default or placeholder functions for onDelete, setNodes, and editNodes
+        const restoredNodes = flow.nodes.map((node: Node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            onDelete: onDeleteNode, // Placeholder function
+            setNodes: nodeNameCreateHandler, // Placeholder function
+            editNodes: editNodeNameHandler, // Placeholder function
+            getData: getDataHandler, // Placeholder function
+
+            edges: edges,
+            nodes: nodes,
+          },
+        }));
+
+        setNodes(restoredNodes);
+        setEdges(flow.edges);
         rfInstance?.fitView();
       }
-    };
+    }
+  };
 
-    restoreFlow();
-  }, [setNodes, setEdges, rfInstance]);
+  const onConnect: OnConnect = (params) => {
+    setEdges((prevEdges) => [
+      ...prevEdges,
+      {
+        id: Math.random().toString() || "",
+        source: params.source ?? "",
+        target: params.target ?? "",
+        sourceHandle: params.sourceHandle ?? "default", // provide a default handle
+        targetHandle: params.targetHandle ?? "default", // provide a default handle
+        type: "textUpdater",
+        markerEnd: { type: MarkerType.ArrowClosed, color: "black" },
+      },
+    ]);
 
-  const onConnect: OnConnect = useCallback(
-    (params) => {
-      setEdges((eds) => addEdge(params, eds));
-      console.log(
-        `Connected from node ${params.source} to node ${params.target}`
-      );
-      console.log(params);
-    },
-    [setEdges]
-  );
-
+    console.log(
+      `Connected from node ${params.source} to node ${params.target}`
+    );
+  };
   const nodeTypes = useMemo(() => ({ textUpdater: CustomNode }), []);
   const defaultEdgeOptions = {
     style: { strokeWidth: 1.5, stroke: "black" },
-    type: "floating",
+    type: "textUpdater",
     markerEnd: {
       type: MarkerType.ArrowClosed,
       color: "black",
     },
   };
+  const edgeTypes = {
+    textUpdater: CustomEdge,
+  };
 
-  // const AddHandler = () => {
-  //   if (!InputText) return;
-  //   if (nodes.find((data) => data.data.label === InputText))
-  //     return alert("please enter different text");
-  //   setInputText("");
-  //   setNodes((prev) => [
-  //     ...prev,
-  //     {
-  //       id: InputText,
-  //       type: "textUpdater",
-  //       position: { x: 300, y: 10 },
-  //       data: { label: InputText, onDelete: onDeleteNode },
-  //     },
-  //   ]);
-  // };
   const proOptions = { hideAttribution: true };
   const handleLoad = (reactFlowInstance: ReactFlowInstance) => {
+    console.log(edges);
     setRfInstance(reactFlowInstance);
   };
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -200,50 +291,37 @@ export default function App() {
           label: "node",
           onDelete: onDeleteNode,
           setNodes: nodeNameCreateHandler,
+          edges: edges,
           nodes: nodes,
           editNodes: editNodeNameHandler,
+          getData: getDataHandler,
         },
       };
       setNodes((prev) => [...prev, newNode]);
     }
   };
 
-  // const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
-  //   event.preventDefault();
-
-  //   const newNode = {
-  //     id: Math.random().toString(),
-  //     type: "textUpdater",
-  //     position: { x: 330, y: 40 },
-  //     data: {
-  //       label: "node",
-  //       onDelete: onDeleteNode,
-  //       setNodes: nodeNameCreateHandler,
-  //       nodes: nodes,
-  //       editNodes: editNodeNameHandler,
-  //     },
-  //   };
-  //   setNodes((prev) => [...prev, newNode]);
-  // };
   const onDragStart = (event: React.DragEvent<HTMLParagraphElement>) => {
     event.dataTransfer.effectAllowed = "move";
   };
+
   return (
-    <ReactFlowProvider>
-      <div
-        className="wrapper"
-        style={{
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          flexDirection: "row",
-          gap: "5px",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div className="addModuleWrapper">
-          {/* <input
+    <FlowContext.Provider value={SelectedData}>
+      <ReactFlowProvider>
+        <div
+          className="wrapper"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "row",
+            gap: "5px",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div className="addModuleWrapper">
+            {/* <input
             type="text"
             className="input-inside"
             onChange={(e) => {
@@ -255,49 +333,86 @@ export default function App() {
           <button className="inside-button" onClick={AddHandler}>
             Submit
           </button> */}
-          <p
-            className="draggbleNode"
-            onDragStart={(event) => onDragStart(event)}
-            draggable
-          >
-            ADD NODE +
-          </p>
-        </div>
+            <p
+              className="draggbleNode"
+              onDragStart={(event) => onDragStart(event)}
+              draggable
+            >
+              ADD NODE +
+            </p>
+            <>
+              {SelectedId.id.length > 0 ? (
+                <div>
+                  <div className="SelectedNode">
+                    <p className="labelSel">Selected Node:</p>
+                    <p>{SelectedId.name.toUpperCase()} NODE</p>
+                  </div>
+                  <div className="SelectedNode">
+                    <p className="labelSel">Incoming Node:</p>
+                    <p>
+                      {SelectedData.incoming.length < 1
+                        ? "No Nodes"
+                        : SelectedData?.incoming.join(" Node, ")}{" "}
+                      {SelectedData?.incoming.length < 1 ? "" : "Node"}
+                    </p>
+                  </div>
+                  <div className="SelectedNode">
+                    <p className="labelSel">Outgoing Node:</p>
+                    <p>
+                      {SelectedData?.outgoing.length < 1
+                        ? "No Nodes"
+                        : SelectedData?.outgoing.join(" Node, ")}
+                      {SelectedData?.outgoing.length < 1 ? "" : " Node"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p>no nodes selected</p>
+              )}
+            </>
+          </div>
 
-        <div
-          style={{
-            width: "80vw",
-            height: "90vh",
-            backgroundColor: "#E9E9F7",
-            transition: "all 300s ease",
-          }}
-          id="reactflow-container" // Give it a unique ID
-          ref={reactFlowContainerRef}
-        >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            proOptions={proOptions}
-            onDrop={onDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onInit={handleLoad} //
+          <div
+            style={{
+              width: "80vw",
+              height: "90vh",
+              backgroundColor: "#E9E9F7",
+              transition: "all 300s ease",
+            }}
+            id="reactflow-container" // Give it a unique ID
+            ref={reactFlowContainerRef}
           >
-            <Background color="#ccc" variant={BackgroundVariant.Dots} />
-            <Controls
-              style={{ display: "flex", flexDirection: "column", gap: "1px" }}
-            />
-            <Panel position="top-right" style={{ display: "flex", gap: "8px" }}>
-              <button onClick={onSave}>Save</button>
-              <button onClick={onRestore}>Restore</button>
-            </Panel>
-          </ReactFlow>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              defaultEdgeOptions={defaultEdgeOptions}
+              proOptions={proOptions}
+              onDrop={onDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onInit={handleLoad} //
+              fitView
+              attributionPosition="top-right"
+              connectionMode={ConnectionMode.Loose}
+            >
+              <Background color="#ccc" variant={BackgroundVariant.Dots} />
+              <Controls
+                style={{ display: "flex", flexDirection: "column", gap: "1px" }}
+              />
+              <Panel
+                position="top-right"
+                style={{ display: "flex", gap: "8px" }}
+              >
+                <button onClick={onSave}>Save</button>
+                <button onClick={onRestore}>Restore</button>
+              </Panel>
+            </ReactFlow>
+          </div>
         </div>
-      </div>
-    </ReactFlowProvider>
+      </ReactFlowProvider>
+    </FlowContext.Provider>
   );
 }

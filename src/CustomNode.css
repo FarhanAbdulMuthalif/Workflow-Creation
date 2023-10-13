@@ -21,5 +21,6 @@
   .node-input {
     border: none;
     background-color: transparent;
+    width: 100px;
   }
 }

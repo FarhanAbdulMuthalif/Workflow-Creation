@@ -37,6 +37,7 @@ export default function FlowConfigDialog({
   };
   const contextData = useContext(FlowContext);
   const { outgoing, incoming } = contextData;
+  console.log(incoming);
   const menuItemStyle = {
     fontSize: "12px",
     color: "#5E5873",

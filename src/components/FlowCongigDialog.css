@@ -1,6 +1,7 @@
 .input-wrapper-div {
   width: 100%;
   display: flex;
+
   align-items: center;
   padding: 5px 8px;
   .input-wrapper-label {
@@ -17,5 +18,32 @@
   #SetEmailSignatureOnConfig,
   #SetEmailBodyOnConfig::placeholder {
     font-size: 12px;
+  }
+}
+.input-wrapper-div-table-setup {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+
+  .input-wrapper-label {
+    width: 38%;
+    font-size: 14px;
+  }
+  .input-wrapper-div-table-setup-view {
+    display: flex;
+    gap: 5px;
+    .tbl-inpt-wrp-grd {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      .show-tbl-dta {
+        display: flex;
+        flex-direction: column;
+      }
+      #SetEmailTableColumnsHeaderOnConfig {
+        font-size: 12px;
+      }
+    }
   }
 }

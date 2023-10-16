@@ -32,8 +32,25 @@ export default function FlowConfigDialog({
   handleOk,
 }: DialogProps) {
   const [value, setvalue] = useState("levelConfig");
+  const [formData, setformData] = useState<{
+    table: string;
+    tableCol: number[];
+    tableRow: number[];
+  }>({ table: "no", tableCol: [], tableRow: [] });
   const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setvalue(newValue);
+  };
+  const TableRowsEnterHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const conToNumber = Number(e.target.value);
+    const newArray = Array.from(
+      { length: conToNumber },
+      (_, index) => index + 1
+    );
+    console.log([e.target.name], newArray);
+    setformData((prev) => {
+      return { ...prev, [e.target.name]: newArray };
+    });
+    console.log(newArray);
   };
   const contextData = useContext(FlowContext);
   const { outgoing, incoming } = contextData;
@@ -354,9 +371,15 @@ export default function FlowConfigDialog({
                 name="row-radio-buttons-group"
                 id="SetEmailTableBoolOnConfig"
                 sx={{ width: "100%" }}
+                value={formData.table}
+                onChange={(e) => {
+                  setformData((prev) => {
+                    return { ...prev, table: e.target.value };
+                  });
+                }}
               >
                 <FormControlLabel
-                  value="female"
+                  value="yes"
                   control={<Radio size="small" />}
                   label={
                     <Typography
@@ -371,7 +394,7 @@ export default function FlowConfigDialog({
                   }
                 />
                 <FormControlLabel
-                  value="male"
+                  value="no"
                   control={<Radio size="small" />}
                   label={
                     <Typography
@@ -387,36 +410,122 @@ export default function FlowConfigDialog({
                 />
               </RadioGroup>
             </div>
-            <div className="input-wrapper-div">
-              <label
-                htmlFor="SetEmailTableRowsOnConfig"
-                className="input-wrapper-label"
-              >
-                Enter Rows :
-              </label>
-              <TextField
-                id="SetEmailTableRowsOnConfig"
-                placeholder="Enter Rows"
-                className="input-wrapper-input"
-                size="small"
-                fullWidth
-              />
-            </div>
-            <div className="input-wrapper-div">
-              <label
-                htmlFor="SetEmailTableColumnsOnConfig"
-                className="input-wrapper-label"
-              >
-                Enter Columns :
-              </label>
-              <TextField
-                id="SetEmailTableColumnsOnConfig"
-                placeholder="Enter Columns"
-                className="input-wrapper-input"
-                size="small"
-                fullWidth
-              />
-            </div>
+            {formData.table === "yes" ? (
+              <>
+                <div className="input-wrapper-div">
+                  <label
+                    htmlFor="SetEmailTableColumnsOnConfig"
+                    className="input-wrapper-label"
+                  >
+                    Enter Columns :
+                  </label>
+                  <TextField
+                    id="SetEmailTableColumnsOnConfig"
+                    placeholder="Enter Columns"
+                    className="input-wrapper-input"
+                    size="small"
+                    onChange={TableRowsEnterHandler}
+                    name="tableCol"
+                    fullWidth
+                  />
+                </div>
+                <div className="input-wrapper-div">
+                  <label
+                    htmlFor="SetEmailTableRowsOnConfig"
+                    className="input-wrapper-label"
+                  >
+                    Enter Rows :
+                  </label>
+                  <TextField
+                    id="SetEmailTableRowsOnConfig"
+                    placeholder="Enter Rows"
+                    className="input-wrapper-input"
+                    size="small"
+                    fullWidth
+                    onChange={TableRowsEnterHandler}
+                    name="tableRow"
+                  />
+                </div>
+
+                {formData.tableCol.length > 0 ? (
+                  <div className="input-wrapper-div-table-setup">
+                    <label
+                      htmlFor="SetEmailTableColumnsHeaderOnConfig"
+                      className="input-wrapper-label"
+                    >
+                      Enter Header :
+                    </label>
+                    <div className="input-wrapper-div-table-setup-view">
+                      {formData.tableCol.map((_colData, colIndex) => (
+                        <div className="tbl-inpt-wrp-grd" key={colIndex}>
+                          <TextField
+                            id="SetEmailTableColumnsHeaderOnConfig"
+                            placeholder="Enter Header"
+                            className="input-wrapper-input"
+                            size="small"
+                          />
+                          <div className="show-tbl-dta">
+                            {formData.tableRow.length > 0 ? (
+                              <div>
+                                {formData.tableRow.map((_rowData, rowIndex) => (
+                                  <div key={rowIndex}>
+                                    <Select
+                                      size="small"
+                                      fullWidth
+                                      sx={{ fontSize: "12px", margin: "3px 0" }}
+                                    >
+                                      <MenuItem
+                                        sx={{
+                                          fontSize: "12px",
+                                          color: "#5E5873",
+                                        }}
+                                        value=""
+                                      >
+                                        Select Field
+                                      </MenuItem>
+                                      <MenuItem
+                                        sx={{
+                                          fontSize: "12px",
+                                          color: "#5E5873",
+                                        }}
+                                        value="approver"
+                                      >
+                                        Material Code
+                                      </MenuItem>
+                                      <MenuItem
+                                        sx={{
+                                          fontSize: "12px",
+                                          color: "#5E5873",
+                                        }}
+                                        value="cataloger"
+                                      >
+                                        Plant
+                                      </MenuItem>
+                                      <MenuItem
+                                        sx={{
+                                          fontSize: "12px",
+                                          color: "#5E5873",
+                                        }}
+                                        value="requester"
+                                      >
+                                        Department
+                                      </MenuItem>
+                                    </Select>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              ""
+            )}
+
             <div className="input-wrapper-div">
               <label
                 htmlFor="SetEmailSignatureOnConfig"

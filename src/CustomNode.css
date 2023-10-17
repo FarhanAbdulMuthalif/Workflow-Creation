@@ -10,14 +10,19 @@
   color: white;
   font-weight: 500;
   font-size: 14px;
+
+  border: 1px solid rgba(74, 74, 234, 0.316);
+  box-shadow: 5px 5px 5px rgba(74, 74, 234, 0.159), -5px -5px 5px #ffffff;
 }
 .node-radius-box {
-  background-color: #bdbdc785;
   font-size: 14px;
   padding: 10px 20px;
   color: rgb(146, 78, 78);
   font-weight: 500;
   border-radius: 5px;
+  background: #f5f4f4;
+  border: 1px solid rgba(74, 74, 234, 0.316);
+  box-shadow: 5px 5px 5px rgba(74, 74, 234, 0.159), -2px -2px 5px #ffffff;
   .node-input {
     border: none;
     background-color: transparent;

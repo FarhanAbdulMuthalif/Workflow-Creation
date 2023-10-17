@@ -15,10 +15,13 @@ import {
   RadioGroup,
   Radio,
   Typography,
+  IconButton,
 } from "@mui/material";
 import { useContext, useState } from "react";
 import "./FlowCongigDialog.css";
 import { FlowContext } from "../App";
+import CloseIcon from "@mui/icons-material/Close";
+
 interface DialogProps {
   open: boolean;
   handleClose: () => void;
@@ -75,6 +78,17 @@ export default function FlowConfigDialog({
       >
         {content} Configration
       </DialogTitle>
+      <IconButton
+        aria-label="close"
+        onClick={handleClose}
+        sx={{
+          position: "absolute",
+          right: 8,
+          top: 8,
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
       <DialogContent
         sx={{
           width: "36rem",
@@ -205,8 +219,7 @@ export default function FlowConfigDialog({
               style={{
                 display: "flex",
                 width: "100%",
-                justifyContent: "space-between",
-                gap: "5px",
+                justifyContent: "space-around",
                 margin: "10px 0",
               }}
             >

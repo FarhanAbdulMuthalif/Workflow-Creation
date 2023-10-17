@@ -9,12 +9,14 @@
   transition: all 300s ease;
   padding: 1rem 0;
   .draggbleNode {
-    background-color: #bdbdc785;
     font-size: 14px;
-    padding: 10px 20px;
-    color: rgb(146, 78, 78);
-    font-weight: 500;
+    padding: 15px 25px;
+    color: blue;
+    font-weight: 600;
     border-radius: 5px;
+    background: #ffffff;
+    border: 1px solid rgba(74, 74, 234, 0.316);
+    box-shadow: 5px 5px 5px rgba(74, 74, 234, 0.159), -5px -5px 5px #ffffff;
   }
   .SelectedNode {
     width: 160px;
@@ -26,8 +28,12 @@
     padding: 5px;
     font-weight: 700;
     color: blue;
-    border: 1px solid rgba(144, 141, 141, 0.765);
+    /* border: 1px solid rgba(144, 141, 141, 0.765);
+    border-radius: 5px; */
     border-radius: 5px;
+    background: #ffffff;
+    border: 1px solid rgba(74, 74, 234, 0.316);
+    box-shadow: 5px 5px 5px rgba(74, 74, 234, 0.159), -5px -5px 5px #ffffff;
     margin-top: 10px;
     .labelSel {
       font-weight: 600;
